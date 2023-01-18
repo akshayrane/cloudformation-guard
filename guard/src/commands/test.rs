@@ -1,7 +1,10 @@
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::fs::File;
+use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use clap::{App, Arg, ArgGroup, ArgMatches};
 use serde::{Deserialize, Serialize};
@@ -31,7 +34,7 @@ use crate::rules::{Evaluate, NamedStatus, RecordType, Result, Status};
 pub struct Test {}
 
 impl Test {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Test {}
     }
 }
@@ -77,7 +80,7 @@ or failure testing.
                 .help("Verbose logging"))
     }
 
-    fn execute(&self, app: &ArgMatches<'_>) -> Result<i32> {
+    fn execute(&self, app: &ArgMatches<'_>, mut reader: impl Read, mut writer: impl Write) -> Result<i32>  {
         let mut exit_code = 0;
         let cmp = if let Some(_ignored) = app.value_of(ALPHABETICAL.0) {
             alpabetical

@@ -1,4 +1,7 @@
+use std::cell::RefCell;
 use std::fs::{File};
+use std::io::{Read, Write};
+use std::rc::Rc;
 use clap::{App, Arg, ArgMatches};
 use crate::command::Command;
 use crate::commands::{OUTPUT, PARSE_TREE, PRINT_JSON, PRINT_YAML, RULES};
@@ -31,18 +34,18 @@ impl Command for ParseTree {
                 .help("Print output in YAML format"))
     }
 
-    fn execute(&self, app: &ArgMatches<'_>) -> Result<i32> {
+    fn execute(&self, app: &ArgMatches<'_>, mut reader: impl Read, mut writer: impl Write) -> Result<i32>  {
 
         let mut file: Box<dyn std::io::Read> = match app.value_of(RULES.0) {
             Some(file) => Box::new(std::io::BufReader::new(File::open(file)?)),
             None => {
-                Box::new(std::io::stdin())
+                Box::new(reader)
             }
         };
 
         let out= match app.value_of(OUTPUT.0) {
                 Some(file) => Box::new(File::create(file)?) as Box<dyn std::io::Write>,
-            None => Box::new(std::io::stdout()) as Box<dyn std::io::Write>
+            None => Box::new(&mut writer) as Box<dyn std::io::Write>
         };
 
         let yaml = !app.is_present(PRINT_JSON.0);

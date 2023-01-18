@@ -1,8 +1,6 @@
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
 use clap::App;
 use std::collections::HashMap;
-
+use std::io::{Read, Write};
 
 mod rules;
 mod commands;
@@ -13,6 +11,7 @@ mod utils;
 use crate::command::Command;
 use rules::errors::Error;
 use std::process::exit;
+use std::rc::Rc;
 use crate::commands::{APP_NAME, APP_VERSION};
 
 
@@ -50,10 +49,13 @@ fn main() -> Result<(), Error>{
     }
 
     let app = app.get_matches();
+    let mut reader = std::io::stdin();
+    let mut writer = std::io::stdout();
+
     match app.subcommand() {
         (name, Some(value)) => {
             if let Some(command) = mappings.get(name) {
-                match (*command).execute(value) {
+                match (*command).execute(value, &mut reader, writer) {
                     Err(e) => {
                         println!("Error occurred {}", e);
                         exit(-1);

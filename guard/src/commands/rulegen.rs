@@ -1,8 +1,11 @@
+use std::cell::RefCell;
 use std::fs;
 use std::fs::{File};
 use std::process;
 
 use std::collections::{HashMap, HashSet};
+use std::io::{Read, Write};
+use std::rc::Rc;
 use clap::{App, Arg, ArgMatches};
 use crate::command::Command;
 use crate::rules::Result;
@@ -32,17 +35,18 @@ impl Command for Rulegen {
             .arg(Arg::with_name(OUTPUT.0).long(OUTPUT.0).short(OUTPUT.1).takes_value(true).help("Write to output file").required(false))
     }
 
-    fn execute(&self, app: &ArgMatches<'_>) -> Result<i32> {
+    fn execute(&self, app: &ArgMatches<'_>, mut reader: impl Read, mut writer: impl Write) -> Result<i32>  {
+
         let file = app.value_of(TEMPLATE.0).unwrap();
         let template_contents = fs::read_to_string(file)?;
 
-        let out = match app.value_of(OUTPUT.0) {
-            Some(file) => Box::new(File::create(file)?) as Box<dyn std::io::Write>,
-            None => Box::new(std::io::stdout()) as Box<dyn std::io::Write>
-        };
+        // let out = match app.value_of(OUTPUT.0) {
+        //     Some(file) => Box::new(File::create(file)?) as Box<dyn std::io::Write>,
+        //     None => Box::new(&mut writer) as Box<dyn std::io::Write>
+        // };
 
         let result = parse_template_and_call_gen(&template_contents);
-        print_rules(result, out)?;
+        print_rules(result, writer)?;
 
         Ok(0 as i32)
     }
@@ -168,7 +172,7 @@ fn gen_rules(cfn_resources: HashMap<String, Value>) -> HashMap<String, HashMap<S
 //          %aws_ec2_volume_resources.Properties.AvailabilityZone IN ["us-west-2b", "us-west-2c"]
 //          %aws_ec2_volume_resources.Properties.Encrypted == false
 //     }
-fn print_rules(rule_map : HashMap<String, HashMap<String, HashSet<String>>>, mut writer : Box<dyn std::io::Write>) -> Result<()> {
+fn print_rules(rule_map : HashMap<String, HashMap<String, HashSet<String>>>, mut writer : impl Write) -> Result<()> {
     let mut str = Builder::default();
 
     for (resource, properties) in &rule_map {
@@ -198,7 +202,7 @@ fn print_rules(rule_map : HashMap<String, HashMap<String, HashSet<String>>>, mut
             //
             // TODO fix with Error return
             //
-            write!(writer,"{}", generated_rules)?;
+            write!(&mut writer,"{}", generated_rules)?;
         },
         Err(e) => {
             println!("Parsing error with generated rules file, Error = {}", e);

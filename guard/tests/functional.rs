@@ -192,6 +192,22 @@ mod tests {
     }
 
     #[test]
+    fn test_single_data_file_single_rules_file_verbose() {
+        let data_arg = utils::get_full_path_for_resource_file(
+            "resources/data-dir/s3-public-read-prohibited-template-non-compliant.yaml",
+        );
+        let rules_arg = utils::get_full_path_for_resource_file(
+            "resources/rules-dir/s3_bucket_public_read_prohibited.guard",
+        );
+        let data_option = format!("-{}", DATA.1);
+        let rules_option = format!("-{}", RULES.1);
+        let args = vec![VALIDATE, &data_option, &data_arg, &rules_option, &rules_arg];
+        let (status_code, cli_output ) = utils::cfn_guard_test_command_verbose(Validate::new(), args);
+        assert_eq!(5, status_code);
+        assert_eq!("test", cli_output);
+    }
+
+    #[test]
     fn test_data_dir_single_rules_file() {
         let data_arg = utils::get_full_path_for_resource_file("resources/data-dir/");
         let rules_arg = utils::get_full_path_for_resource_file(

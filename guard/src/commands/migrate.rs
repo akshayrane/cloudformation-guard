@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use clap::{App, Arg, ArgMatches};
 
 
@@ -7,10 +8,11 @@ use crate::rules::Result;
 use crate::migrate::parser::{parse_rules_file, RuleLineType, Rule, TypeName, Clause};
 use std::fs::File;
 use std::fmt::Write as FmtWrite;
-use std::io::Write as IoWrite;
+use std::io::{Read, Write as IoWrite, Write};
 use std::collections::{HashSet, HashMap};
 use crate::rules::errors::{Error, ErrorKind};
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::str::FromStr;
 use itertools::Itertools;
 use crate::commands::{MIGRATE, OUTPUT, RULES};
@@ -25,7 +27,7 @@ mod migrate_tests;
 pub(crate) struct Migrate {}
 
 impl Migrate {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Migrate{}
     }
 }
@@ -44,7 +46,8 @@ impl Command for Migrate {
             .arg(Arg::with_name(OUTPUT.0).long(OUTPUT.0).short(OUTPUT.1).takes_value(true).help("Write migrated rules to output file").required(false))
     }
 
-    fn execute(&self, app: &ArgMatches<'_>) -> Result<i32> {
+    fn execute(&self, app: &ArgMatches<'_>, mut reader: impl Read, mut writer: impl Write) -> Result<i32>  {
+
         let file_input = app.value_of(RULES.0).unwrap();
         let path = PathBuf::from_str(file_input).unwrap();
         let file_name = path.to_str().unwrap_or("").to_string();
@@ -52,7 +55,7 @@ impl Command for Migrate {
 
         let mut out= match app.value_of(OUTPUT.0) {
             Some(file) => Box::new(File::create(file)?) as Box<dyn std::io::Write>,
-            None => Box::new(std::io::stdout()) as Box<dyn std::io::Write>
+            None => Box::new(&mut writer) as Box<dyn std::io::Write>
         };
         match read_file_content(file) {
             Err(e) => {

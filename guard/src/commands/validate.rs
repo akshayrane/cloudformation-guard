@@ -1,10 +1,9 @@
-use std::cmp;
+use std::{cmp, fmt};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::str::FromStr;
 
 use clap::{App, Arg, ArgGroup, ArgMatches};
@@ -106,7 +105,7 @@ pub(crate) struct Payload {
 }
 
 impl Validate {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Validate {}
     }
 }
@@ -173,7 +172,11 @@ or rules files.
                 .required(true))
     }
 
-    fn execute(&self, app: &ArgMatches<'_>) -> Result<i32> {
+    fn execute(&self, app: &ArgMatches<'_>, mut reader: impl Read, mut writer: impl Write) -> Result<i32>  {
+
+        let mut input = BufReader::new(reader);
+        // let mut write_output = &mut writer;
+
         let cmp = if app.is_present(LAST_MODIFIED.0) {
             last_modified
         } else {
@@ -195,8 +198,8 @@ or rules files.
                                 .map_or("".to_string(), String::from);
                             if has_a_supported_extension(&name, &DATA_FILE_SUPPORTED_EXTENSIONS) {
                                 let mut content = String::new();
-                                let mut reader = BufReader::new(File::open(file.path())?);
-                                reader.read_to_string(&mut content)?;
+                                let mut file_input = BufReader::new(File::open(file.path())?);
+                                file_input.read_to_string(&mut content)?;
                                 let path = file.path();
                                 let relative = match path.strip_prefix(base.as_path()) {
                                     Ok(p) => {
@@ -226,8 +229,8 @@ or rules files.
             None => {
                 if app.is_present(RULES.0) {
                     let mut content = String::new();
-                    let mut reader = BufReader::new(std::io::stdin());
-                    reader.read_to_string(&mut content)?;
+                    // let mut input = BufReader::new(reader);
+                    input.read_to_string(&mut content)?;
                     let path_value = match get_path_aware_value_from_data(&content) {
                         Ok(t) => t,
                         Err(e) => return Err(e),
@@ -258,8 +261,8 @@ or rules files.
                                 .map_or("".to_string(), String::from);
                             if has_a_supported_extension(&name, &DATA_FILE_SUPPORTED_EXTENSIONS) {
                                 let mut content = String::new();
-                                let mut reader = BufReader::new(File::open(file.path())?);
-                                reader.read_to_string(&mut content)?;
+                                let mut file_input = BufReader::new(File::open(file.path())?);
+                                file_input.read_to_string(&mut content)?;
                                 let path_value = match get_path_aware_value_from_data(&content) {
                                     Ok(t) => t,
                                     Err(e) => return Err(e),
@@ -399,6 +402,7 @@ or rules files.
                                     show_clause_failures,
                                     new_version_eval_engine,
                                     summary_type,
+                                    &mut writer
                                 )? {
                                     Status::SKIP | Status::PASS => continue,
                                     Status::FAIL => {
@@ -412,8 +416,9 @@ or rules files.
             }
         } else {
             let mut context = String::new();
-            let mut reader = BufReader::new(std::io::stdin());
-            reader.read_to_string(&mut context)?;
+            // let mut reader = BufReader::new(std::io::stdin());
+            // reader.read_to_string(&mut context)?;
+            input.read_to_string(&mut context)?;
             let payload: Payload = deserialize_payload(&context)?;
             let mut data_collection: Vec<DataFile> = Vec::new();
             for (i, data) in payload.list_of_data.iter().enumerate() {
@@ -461,6 +466,7 @@ or rules files.
                             show_clause_failures,
                             new_version_eval_engine,
                             summary_type,
+                            &mut writer
                         )? {
                             Status::SKIP | Status::PASS => continue,
                             Status::FAIL => {
@@ -705,17 +711,17 @@ impl<'r> ConsoleReporter<'r> {
                 )?;
             }
 
-            match String::from_utf8(output) {
+            match String::from_utf8(output.to_vec()) {
                 Ok(s) => Ok(s),
                 Err(e) => Err(Error::new(ErrorKind::ParseError(e.to_string()))),
             }
         }
     }
 
-    fn report(self, root: &PathAwareValue, output_format_type: OutputFormatType) -> Result<()> {
+    fn report(self, root: &PathAwareValue, output_format_type: OutputFormatType, mut writer: impl Write) -> Result<()> {
         let stack = self.root_context.stack();
         let top = stack.first().unwrap();
-        let mut output = Box::new(std::io::stdout()) as Box<dyn Write>;
+        // let mut output = Box::new(std::io::stdout()) as Box<dyn Write>;
 
         if self.verbose && self.print_json {
             let serialized_user = serde_json::to_string_pretty(&top.children).unwrap();
@@ -730,7 +736,7 @@ impl<'r> ConsoleReporter<'r> {
 
             for each_reporter in self.reporters {
                 each_reporter.report(
-                    &mut output,
+                    &mut writer,
                     top.status,
                     &failed,
                     &rest,
@@ -804,9 +810,11 @@ fn evaluate_against_data_input<'r>(
     show_clause_failures: bool,
     new_engine_version: bool,
     summary_table: BitFlags<SummaryType>,
+    mut writer: impl Write
 ) -> Result<Status> {
     let mut overall = Status::PASS;
-    let mut write_output = Box::new(std::io::stdout()) as Box<dyn Write>;
+    // let mut write_output = Box::new(writer) as Box<dyn Write>;
+    // let mut write_output = Box::new(std::io::stdout()) as Box<dyn Write>;
     let generic: Box<dyn Reporter> =
         Box::new(generic_summary::GenericSummary::new()) as Box<dyn Reporter>;
     let tf: Box<dyn Reporter> = Box::new(TfAware::new_with(generic.as_ref())) as Box<dyn Reporter>;
@@ -831,7 +839,7 @@ fn evaluate_against_data_input<'r>(
             let status = eval_rules_file(rules, &mut root_scope)?;
             let root_record = root_scope.reset_recorder().extract();
             reporter.report_eval(
-                &mut write_output,
+                &mut writer,
                 status,
                 &root_record,
                 rules_file_name,
@@ -868,7 +876,7 @@ fn evaluate_against_data_input<'r>(
                 root_context: each,
             };
             let status = rules.evaluate(each, &appender)?;
-            reporter.report(each, output)?;
+            reporter.report(each, output, &mut writer)?;
             if status == Status::FAIL {
                 overall = Status::FAIL
             }

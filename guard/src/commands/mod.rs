@@ -1,10 +1,10 @@
 pub(crate) mod files;
 pub mod validate;
-pub(crate) mod rulegen;
+pub mod rulegen;
 pub mod test;
 pub(crate) mod helper;
-pub(crate) mod parse_tree;
-pub(crate) mod migrate;
+pub mod parse_tree;
+pub mod migrate;
 
 mod tracker;
 mod aws_meta_appender;
