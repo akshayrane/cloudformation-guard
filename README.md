@@ -2,6 +2,8 @@
 
 **Validate Cloud Environments with Policy-as-Code**
 
+Dummy change
+
 AWS CloudFormation Guard is an open-source general-purpose policy-as-code evaluation tool. It provides developers with a simple-to-use, yet powerful and expressive domain-specific language (DSL) to define policies and enables developers to validate JSON- or YAML- formatted structured data with those policies. 
 
 Guard 2.0 release is a complete re-write of the earlier 1.0 version to make the tool general-purpose. With Guard 2.0, developers can continue writing policies for CloudFormation Templates. In addition, developers can use Guard in the following business domains:
