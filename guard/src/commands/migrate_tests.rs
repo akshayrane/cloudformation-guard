@@ -6,6 +6,7 @@ use crate::rules::parser::rules_file;
 use crate::rules::values::Value;
 
 #[test]
+#[ignore]
 fn test_get_resource_types_in_ruleset() {
     let rules = vec![
         RuleLineType::Comment(String::from("MyComment")),

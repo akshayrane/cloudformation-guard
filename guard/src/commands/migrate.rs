@@ -21,9 +21,11 @@ use std::str::FromStr;
 mod migrate_tests;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[deprecated(since = "3.0.0")]
 pub struct Migrate {}
 
 #[allow(clippy::new_without_default)]
+#[deprecated(since = "3.0.0")]
 impl Migrate {
     pub fn new() -> Self {
         Migrate {}

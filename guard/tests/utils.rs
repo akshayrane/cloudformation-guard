@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use cfn_guard::command::Command;
 use cfn_guard::commands::{
-    migrate::Migrate, parse_tree::ParseTree, rulegen::Rulegen, test::Test, validate::Validate,
+    parse_tree::ParseTree, rulegen::Rulegen, test::Test, validate::Validate,
 };
 use cfn_guard::utils::reader::ReadBuffer::File as ReadFile;
 use cfn_guard::utils::reader::Reader;
@@ -80,7 +80,6 @@ pub trait CommandTestRunner {
         commands.push(Box::new(Validate::new()));
         commands.push(Box::new(Test::new()));
         commands.push(Box::new(ParseTree::new()));
-        commands.push(Box::new(Migrate::new()));
         commands.push(Box::new(Rulegen::new()));
 
         let mappings = commands.iter().map(|s| (s.name(), s)).fold(

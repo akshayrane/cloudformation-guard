@@ -20,11 +20,13 @@ mod migrate_tests {
     use crate::utils::{get_full_path_for_resource_file, CommandTestRunner, StatusCode};
 
     #[derive(Default)]
+    #[deprecated(since = "3.0.0")]
     struct MigrateTestRunner<'args> {
         rules: Option<&'args str>,
         output: Option<&'args str>,
     }
 
+    #[deprecated(since = "3.0.0")]
     impl<'args> MigrateTestRunner<'args> {
         fn rules(&'args mut self, arg: Option<&'args str>) -> &'args mut MigrateTestRunner {
             self.rules = arg;
@@ -56,6 +58,7 @@ mod migrate_tests {
     }
 
     #[rstest::rstest]
+    #[ignore]
     #[case(
         Some("resources/migrate/rules-dir/rule_1dot0.guard"),
         "resources/migrate/output-dir/test_migrate_rule.guard",
@@ -77,6 +80,7 @@ mod migrate_tests {
     }
 
     #[test]
+    #[ignore]
     fn test_migrate_rule_with_invalid_file() {
         let mut reader = Reader::new(Stdin(std::io::stdin()));
         let mut writer = Writer::new(WBVec(vec![]), WBVec(vec![]));

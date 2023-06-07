@@ -5,6 +5,7 @@ use crate::rules::values::Value::Bool;
 use indexmap::map::IndexMap;
 
 #[test]
+#[ignore]
 fn test_assignment() {
     let examples = vec!["let my_variable = 1234", "letpropertyaccess", "let my IN"];
 
@@ -48,6 +49,7 @@ fn test_assignment() {
 }
 
 #[test]
+#[ignore]
 fn test_parse_old_guard_values_integer() {
     let mut nested_map = IndexMap::new();
     nested_map.insert(
@@ -106,6 +108,7 @@ fn test_parse_old_guard_values_integer() {
 }
 
 #[test]
+#[ignore]
 fn test_parse_old_guard_value_optional_message() {
     let example = "  this is a bare string << with optional message";
     let expected_span = unsafe {
@@ -126,6 +129,7 @@ fn test_parse_old_guard_value_optional_message() {
 }
 
 #[test]
+#[ignore]
 fn test_comment_parse() {
     let s = "#this is a comment ";
     assert_eq!(
@@ -135,6 +139,7 @@ fn test_comment_parse() {
 }
 
 #[test]
+#[ignore]
 fn test_value_cmp() {
     let example = vec![
         "==",
@@ -175,6 +180,7 @@ fn test_value_cmp() {
 }
 
 #[test]
+#[ignore]
 fn test_property_path() {
     let examples = vec![
         ".property.path.*.",
@@ -207,6 +213,7 @@ fn test_property_path() {
 }
 
 #[test]
+#[ignore]
 fn test_property_path_stops_whitespace() {
     let example = ".property.path.*     ";
 
@@ -219,6 +226,7 @@ fn test_property_path_stops_whitespace() {
 }
 
 #[test]
+#[ignore]
 fn test_prop_comparison() {
     let value_list = vec![
         Value::String(String::from("a")),
@@ -241,6 +249,7 @@ fn test_prop_comparison() {
     )
 }
 #[test]
+#[ignore]
 fn test_prop_comparison_invalid_operator_fail() {
     let example = ".property.path.* NOT EXISTS";
     let error_span =
@@ -258,6 +267,7 @@ fn test_prop_comparison_invalid_operator_fail() {
 }
 
 #[test]
+#[ignore]
 fn test_base_rule() {
     let value_list = vec![
         Value::String(String::from("a")),
@@ -288,6 +298,7 @@ fn test_base_rule() {
 }
 
 #[test]
+#[ignore]
 fn test_conditional_rule() {
     let value_list = vec![
         Value::String(String::from("a")),
@@ -323,6 +334,7 @@ fn test_conditional_rule() {
 }
 
 #[test]
+#[ignore]
 fn test_clause_with_message() {
     let value_list = vec![
         Value::String(String::from("a")),
@@ -384,6 +396,7 @@ fn test_clause_with_message() {
 }
 
 #[test]
+#[ignore]
 fn test_parse_rules_file() {
     let value_list = vec![
         Value::String(String::from("a")),
@@ -464,6 +477,7 @@ fn test_parse_rules_file() {
     assert_eq!(parsed_rules, expected_rules);
 }
 #[test]
+#[ignore]
 fn test_parse_rules_file_rule_error() {
     let example =
         "AWS::S3::Bucket WHEN .property.path.*  CHECK BucketName.Encryption == \"Enabled\" \n";
@@ -471,6 +485,7 @@ fn test_parse_rules_file_rule_error() {
 }
 
 #[test]
+#[ignore]
 fn test_disjunction_basic_clauses() {
     let example = "let encryption_flag = true \n AWS::EC2::Volume Encrypted == %encryption_flag \n AWS::EC2::Volume Size == 100 |OR| AWS::EC2::Volume Size == 50";
     let actual_rules =
@@ -529,6 +544,7 @@ fn test_disjunction_basic_clauses() {
 }
 
 #[test]
+#[ignore]
 fn test_disjunction_conditional_clauses() {
     let example = r#"AWS::EC2::Instance WHEN InstanceType == "m2.large" CHECK .DeletionPolicy == Retain |OR| AWS::EC2::Instance WHEN InstanceType == "t2.micro" CHECK .Encrypted == true"#;
     let actual_rules =

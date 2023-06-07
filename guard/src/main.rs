@@ -37,7 +37,6 @@ fn main() -> Result<(), Error> {
     commands.push(Box::new(commands::test::Test::new()));
     commands.push(Box::new(commands::validate::Validate::new()));
     commands.push(Box::new(commands::rulegen::Rulegen::new()));
-    commands.push(Box::new(commands::migrate::Migrate::new()));
 
     let mappings = commands.iter().map(|s| (s.name(), s)).fold(
         HashMap::with_capacity(commands.len()),
