@@ -250,4 +250,39 @@ mod test_command_tests {
             writer
         );
     }
+
+    #[test]
+    fn test_with_rules_dir_verbose_prev_engine() {
+        let mut reader = Reader::new(Stdin(std::io::stdin()));
+        let mut writer = Writer::new(WBVec(vec![]), WBVec(vec![]));
+        let status_code = TestCommandTestRunner::default()
+            .directory(Option::from("resources/test-command/dir"))
+            .directory_only()
+            .verbose()
+            .previous_engine()
+            .run(&mut writer, &mut reader);
+
+        assert_eq!(StatusCode::SUCCESS, status_code);
+        assert_output_from_file_eq!(
+            "resources/test-command/output-dir/test_data_dir_verbose_prev_engine.out",
+            writer
+        );
+    }
+
+    #[test]
+    fn test_with_function_expr() {
+        let mut reader = Reader::new(Stdin(std::io::stdin()));
+        let mut writer = Writer::new(WBVec(vec![]), WBVec(vec![]));
+        let status_code = TestCommandTestRunner::default()
+            .test_data(Option::from(
+                "resources/test-command/functions/data/template.yaml",
+            ))
+            .rules(Some(
+                "resources/test-command/functions/rules/json_parse.guard",
+            ))
+            .verbose()
+            .run(&mut writer, &mut reader);
+
+        assert_eq!(StatusCode::SUCCESS, status_code);
+    }
 }

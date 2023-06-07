@@ -4,9 +4,10 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::str::FromStr;
 
-use clap::{Arg, ArgAction, ArgGroup, ArgMatches};
+use clap::{Arg, ArgAction, ArgGroup, ArgMatches, ValueHint};
 use colored::*;
 use enumflags2::BitFlags;
 use serde::Deserialize;
@@ -158,6 +159,8 @@ or rules files.
                 .short(RULES.1)
                 .num_args(0..)
                 .action(ArgAction::Append)
+                .value_hint(ValueHint::AnyPath)
+                .num_args(0..)
                 .help("Provide a rules file or a directory of rules files. Supports passing multiple values by using this option repeatedly.\
                           \nExample:\n --rules rule1.guard --rules ./rules-dir1 --rules rule2.guard\
                           \nFor directory arguments such as `rules-dir1` above, scanning is only supported for files with following extensions: .guard, .ruleset")
@@ -167,6 +170,7 @@ or rules files.
                 .short(DATA.1)
                 .num_args(0..)
                 .action(ArgAction::Append)
+                .value_hint(ValueHint::FilePath)
                 .help("Provide a data file or directory of data files in JSON or YAML. Supports passing multiple values by using this option repeatedly.\
                           \nExample:\n --data template1.yaml --data ./data-dir1 --data template2.yaml\
                           \nFor directory arguments such as `data-dir1` above, scanning is only supported for files with following extensions: .yaml, .yml, .json, .jsn, .template")
@@ -175,6 +179,7 @@ or rules files.
                 .long(INPUT_PARAMETERS.0)
                 .short(INPUT_PARAMETERS.1)
                 .num_args(0..)
+                .value_hint(ValueHint::AnyPath)
                 .action(ArgAction::Append)
                 .help("Provide a data file or directory of data files in JSON or YAML that specifies any additional parameters to use along with data files to be used as a combined context. \
                            All the parameter files passed as input get merged and this combined context is again merged with each file passed as an argument for `data`. Due to this, every file is \
@@ -184,14 +189,15 @@ or rules files.
             .arg(Arg::new(TYPE.0)
                 .long(TYPE.0)
                 .short(TYPE.1)
-                .action(ArgAction::Set)
                 .required(false)
                 .value_parser(TEMPLATE_TYPE)
+                .value_hint(ValueHint::Other)
                 .help("Specify the type of data file used for improved messaging - ex: CFNTemplate"))
             .arg(Arg::new(OUTPUT_FORMAT.0).long(OUTPUT_FORMAT.0).short(OUTPUT_FORMAT.1)
                 .value_parser(OUTPUT_FORMAT_VALUE_TYPE)
                 .default_value("single-line-summary")
                 .action(ArgAction::Set)
+                .value_hint(ValueHint::Other)
                 .help("Specify the format in which the output should be displayed"))
             .arg(Arg::new(SHOW_SUMMARY.0)
                 .long(SHOW_SUMMARY.0)
@@ -200,6 +206,7 @@ or rules files.
                 .action(ArgAction::Append)
                 .value_parser(SHOW_SUMMARY_VALUE_TYPE)
                 .default_value("fail")
+                .value_hint(ValueHint::Other)
                 .help("Controls if the summary table needs to be displayed. --show-summary fail (default) or --show-summary pass,fail (only show rules that did pass/fail) or --show-summary none (to turn it off) or --show-summary all (to show all the rules that pass, fail or skip)"))
             .arg(Arg::new(ALPHABETICAL.0)
                 .long(ALPHABETICAL.0)
@@ -809,7 +816,7 @@ fn evaluate_against_data_input<'r>(
             None => file.path_value.clone(),
         };
         let traversal = Traversal::from(&each);
-        let mut root_scope = root_scope(rules, &each)?;
+        let mut root_scope = root_scope(rules, Rc::new(each.clone()))?;
         let status = eval_rules_file(rules, &mut root_scope, Some(&file.name))?;
 
         let root_record = root_scope.reset_recorder().extract();

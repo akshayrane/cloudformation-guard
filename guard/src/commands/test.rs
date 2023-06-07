@@ -1,10 +1,11 @@
-use clap::{Arg, ArgAction, ArgGroup, ArgMatches};
+use clap::{Arg, ArgAction, ArgGroup, ArgMatches, ValueHint};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryFrom;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+use std::rc::Rc;
 use walkdir::DirEntry;
 
 use validate::validate_path;
@@ -350,7 +351,8 @@ fn test_with_data(
                     let by_result = {
                         let mut by_result = HashMap::new();
                         let root = PathAwareValue::try_from(each.input)?;
-                        let mut root_scope = crate::rules::eval_context::root_scope(rules, &root)?;
+                        let mut root_scope =
+                            crate::rules::eval_context::root_scope(rules, Rc::new(root.clone()))?;
                         eval_rules_file(rules, &mut root_scope, None)?; // we never use data file name in the output
                         let top = root_scope.reset_recorder().extract();
 
