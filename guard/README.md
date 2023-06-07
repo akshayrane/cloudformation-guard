@@ -126,7 +126,8 @@ Options:
            show-summary: all/fail/pass/skip
           output-format: single-line-summary
   -h, --help
-          Print help```
+          Print help
+```
 
 ### Rulegen
 
@@ -163,49 +164,6 @@ Given the potential for hundreds or even thousands of rules to emerge, we recomm
 
 ```
 cfn-guard rulegen --data template.json --output rules.guard
-```
-
-### Migrate
-
-`migrate` command generates rules in the new AWS Cloudformation Guard 2.0 syntax from rules written using 1.0 language.
-
-```bash
-cfn-guard-migrate
-Migrates 1.0 rules to 2.0 compatible rules.
-
-USAGE:
-    cfn-guard migrate [OPTIONS] --rules <rules>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -o, --output <output>    Write migrated rules to output file
-    -r, --rules <rules>      Provide a rules file
-```
-
-For example for rules written in the 1.0 language (example.ruleset) as:
-
-```bash
-let encryption_flag = true
-
-AWS::EC2::Volume Encrypted == %encryption_flag
-AWS::EC2::Volume Size <= 100
-```
-
-The equivalent rules in the 2.0 language can be generated using the migrate command as:
-
-```bash
-$ cfn-guard migrate --rules example.ruleset
-rule migrated_rules {
-    let aws_ec2_volume = Resources.*[ Type == "AWS::EC2::Volume" ]
-
-    let encryption_flag = true
-
-    %aws_ec2_volume.Properties.Encrypted == %encryption_flag
-    %aws_ec2_volume.Properties.Size <= 100
-}
 ```
 
 ### Parse Tree

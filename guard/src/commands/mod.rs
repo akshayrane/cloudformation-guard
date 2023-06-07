@@ -1,6 +1,5 @@
 pub(crate) mod files;
 pub(crate) mod helper;
-pub mod migrate;
 pub mod parse_tree;
 pub mod rulegen;
 pub mod test;
@@ -17,7 +16,6 @@ mod tracker;
 pub const APP_NAME: &str = "cfn-guard";
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 // Commands
-pub const MIGRATE: &str = "migrate";
 pub const PARSE_TREE: &str = "parse-tree";
 pub const RULEGEN: &str = "rulegen";
 pub const TEST: &str = "test";
@@ -36,9 +34,9 @@ pub const SHOW_CLAUSE_FAILURES: (&str, char) = ("show-clause-failures", 's');
 pub const SHOW_SUMMARY: (&str, char) = ("show-summary", 'S');
 pub const TYPE: (&str, char) = ("type", 't');
 pub const VERBOSE: (&str, char) = ("verbose", 'v');
-// Arguments for validate, migrate, parse tree
+// Arguments for validate, parse tree
 pub const RULES: (&str, char) = ("rules", 'r');
-// Arguments for migrate, parse-tree, rulegen
+// Arguments for parse-tree, rulegen
 pub const OUTPUT: (&str, char) = ("output", 'o');
 // Arguments for parse-tree
 pub const PRINT_YAML: (&str, char) = ("print-yaml", 'y');
